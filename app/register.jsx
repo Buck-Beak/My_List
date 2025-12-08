@@ -10,9 +10,32 @@ import {
 import React from 'react'
 import { Link } from 'expo-router'
 import Ionicons from "react-native-vector-icons/Ionicons";
-
+import { router } from "expo-router";
+import { useState } from "react";
 
 const register = () => {
+  const [firstname, setFirstName] = useState("");
+  const [lastname, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const baseURL = "http://192.168.1.4:4000";  // replace with your IP
+  const handleRegister = async () => {
+    try {
+      const res = await fetch(`${baseURL}/api/user/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstname,lastname, email, password }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Registration failed");
+
+      console.log("Registered!", data);
+      router.push("/login");
+    } catch (error) {
+      console.error("Registration error:", error);
+    }
+  };
   return (
     <View style={styles.container}>
 
@@ -33,6 +56,8 @@ const register = () => {
               placeholder="First Name"
               placeholderTextColor="#888"
               style={styles.input}
+              value={firstname}
+              onChangeText={setFirstName}
             />
           </View>
 
@@ -42,6 +67,8 @@ const register = () => {
               placeholder="Last Name"
               placeholderTextColor="#888"
               style={styles.input}
+              value={lastname}
+              onChangeText={setLastName}
             />
           </View>
         </View>
@@ -54,6 +81,8 @@ const register = () => {
             placeholderTextColor="#888"
             keyboardType="email-address"
             style={styles.input}
+            value={email}
+            onChangeText={setEmail}
           />
         </View>
 
@@ -65,14 +94,18 @@ const register = () => {
             placeholderTextColor="#888"
             secureTextEntry
             style={styles.input}
+            value={password}
+            onChangeText={setPassword}
           />
           <Ionicons name="eye-off-outline" size={18} color="#aaa" style={styles.iconRight} />
         </View>
 
         {/* Continue Button */}
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleRegister}>
           <Text style={styles.buttonText}>Register</Text>
         </TouchableOpacity>
+
+        <Link style={styles.link} href="/landing">Go</Link>
 
       </View>
 
@@ -83,6 +116,9 @@ const register = () => {
 export default register
 
 const styles = StyleSheet.create({
+  link:{
+    color: "#fff",
+  },
   container: {
     flex: 1,
     backgroundColor: "#000",

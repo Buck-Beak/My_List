@@ -10,8 +10,32 @@ import {
 import React from 'react'
 import { Link } from 'expo-router'
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { router } from "expo-router";
+import { useState } from "react";
 
 const login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const baseURL = "http://192.168.1.4:4000";
+  const handleLogin = async () => {
+    try {
+      const res = await fetch(`${baseURL}/api/user/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed");
+      console.log(data.userId);
+      console.log("Logged in!", data);
+      router.push({
+        pathname: "/landing",
+        params: { userName: data.firstname }  // pass whatever comes from login
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  };
   return (
     <View style={styles.container}>
 
@@ -28,10 +52,12 @@ const login = () => {
         <View style={styles.inputBoxFull}>
           <Ionicons name="mail-outline" size={18} color="#aaa" style={styles.inputIcon} />
           <TextInput
-            placeholder="Email or Phone No"
+            placeholder="Email"
             placeholderTextColor="#888"
             keyboardType="email-address"
             style={styles.input}
+            value={email}
+            onChangeText={setEmail}
           />
         </View>
 
@@ -43,12 +69,14 @@ const login = () => {
             placeholderTextColor="#888"
             secureTextEntry
             style={styles.input}
+            value={password}
+            onChangeText={setPassword}
           />
           <Ionicons name="eye-off-outline" size={18} color="#aaa" style={styles.iconRight} />
         </View>
 
         {/* Continue Button */}
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
 
