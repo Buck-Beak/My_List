@@ -1,7 +1,8 @@
 {
   "expo": {
+    "scheme": "mylist",
     "name": "React-Native",
-    "slug": "React-Native",
+    "slug": "mylist",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,10 +21,20 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.ReactNative"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "71530690-63e0-4dd8-a27c-bf5836887450"
+      }
+    },
+    "owner": "buckbeaks-organization"
   }
 }
