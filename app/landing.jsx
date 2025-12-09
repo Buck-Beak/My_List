@@ -11,7 +11,6 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { router } from "expo-router";
-import Card from "./components/card";
 
 const landing = () => {
     const {userId} = useLocalSearchParams();
@@ -81,7 +80,8 @@ const landing = () => {
                 setShowCreateModal(false);   // close modal
 
                 // Navigate to Category Page
-                router.push(`/category/${category}?userId=${userId}`);
+                console.log("New category ID:", data.content._id);
+                router.push(`/category/${category}?userId=${userId}&firstName=${firstName}&categoryId=${data.content._id}`);
             } else {
                 console.log("Error:", data.error);
             }
@@ -172,6 +172,9 @@ const landing = () => {
             </View>
         </View>
         )}
+        <TouchableOpacity style={styles.categoryBtn} onPress={()=>{router.push(`/category/Movies?userId=${userId}&firstName=${firstName}`)}}>
+            <Text style={styles.categoryText}>Test button</Text>
+        </TouchableOpacity>
 
         {/* SECTIONS */}
         {filtered.map(category => renderSection(category))}

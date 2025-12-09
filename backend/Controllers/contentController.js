@@ -66,3 +66,32 @@ export const getContentById = async (req, res) => {
   }
 };
 
+export const addGenre = async (req, res) => {
+  const { contentId } = req.params;
+  const { genre } = req.body;
+
+  try {
+    const updatedContent = await Content.findByIdAndUpdate(
+      contentId,
+      {
+        $push: {
+          genre: {
+            title: genre,
+            lists: []   // empty for now
+          }
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedContent) {
+      return res.status(404).json({ error: "Content not found" });
+    }
+
+    res.status(200).json(updatedContent);
+  } catch (err) {
+    console.error("Error adding genre:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+

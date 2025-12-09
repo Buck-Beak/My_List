@@ -12,7 +12,7 @@ import { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { router } from "expo-router";
 
-export default function CategoryPage() {
+export default function GenrePage() {
   const { categoryId,category,firstName, userId } = useLocalSearchParams();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [genre,setGenre] = useState("");
