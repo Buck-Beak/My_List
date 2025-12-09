@@ -31,6 +31,7 @@ const register = () => {
       if (!res.ok) throw new Error(data.error || "Registration failed");
 
       console.log("Registered!", data);
+      console.log("Registration received firstname:", data.firstname);
       router.push("/login");
     } catch (error) {
       console.error("Registration error:", error);

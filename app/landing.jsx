@@ -6,12 +6,35 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
-import { useSearchParams } from "expo-router/build/hooks";
+import { useLocalSearchParams } from "expo-router";
 
 const landing = () => {
-    const { userName } = useSearchParams();
+    const {userId} = useLocalSearchParams();
+    console.log("Landing received userid:", userId);
+    const [firstName, setFirstName] = useState("");
+    const baseURL = "http://192.168.1.4:4000";
+
+    useEffect(() => {
+        const fetchUserName = async () => {
+            try {
+                const res = await fetch(`${baseURL}/api/user/${userId}`,{
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+                const data = await res.json();
+                if (res.ok) {
+                setFirstName(data.firstname);
+                } else {
+                console.error(data.error);
+                }
+            } catch (err) {
+                console.error("Failed to fetch user:", err);
+            }
+        };
+        fetchUserName();
+    }, []);
   return (
     <View style={styles.container}>
       {/* TOP NAVBAR */}
@@ -69,7 +92,7 @@ const landing = () => {
 
         <TouchableOpacity style={styles.bottomItem}>
           <Image source={require("../assets/person.png")} style={styles.bottomIcon} />
-          <Text style={styles.bottomText}>{userName || "Profile"}</Text>
+          <Text style={styles.bottomText}>{firstName || "Profile"}</Text>
         </TouchableOpacity>
       </View>
     </View>

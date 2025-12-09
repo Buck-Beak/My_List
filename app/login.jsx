@@ -28,9 +28,10 @@ const login = () => {
       if (!res.ok) throw new Error(data.error || "Login failed");
       console.log(data.userId);
       console.log("Logged in!", data);
+      console.log("Login received userid:", data.userId);
       router.push({
         pathname: "/landing",
-        params: { userName: data.firstname }  // pass whatever comes from login
+        params: { userId: data.userId },
       });
     } catch (error) {
       console.error("Login error:", error);
