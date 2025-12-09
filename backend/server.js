@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 
 import userRoutes from "./Routes/userRoutes.js";
+import contentRoutes from "./Routes/contentRoutes.js";
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/api/user", userRoutes);
+app.use("/api", contentRoutes);
 
 const PORT = process.env.PORT || 4000;
 

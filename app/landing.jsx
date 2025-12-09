@@ -5,16 +5,37 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
+  TextInput
 } from "react-native";
 import React, { useEffect } from "react";
 import { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
+import Card from "./components/card";
 
 const landing = () => {
     const {userId} = useLocalSearchParams();
     console.log("Landing received userid:", userId);
     const [firstName, setFirstName] = useState("");
+    const [showSearchBar, setShowSearchBar] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+
     const baseURL = "http://192.168.1.4:4000";
+    const allCategories = ["Kdramas", "Movies", "TV Shows"];
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [category,setCategory] = useState("");
+
+    const handleCreateCategory = () => {
+        setShowCreateModal(true);
+    };
+
+    const closeModal = () => {
+        setShowCreateModal(false);
+    };
+
+    const filtered = allCategories.filter(c =>
+        c.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     useEffect(() => {
         const fetchUserName = async () => {
@@ -35,6 +56,39 @@ const landing = () => {
         };
         fetchUserName();
     }, []);
+
+    const handleSearch = () => {
+        setShowSearchBar(!showSearchBar);
+    }
+
+    const handleAddCategory = async () => {
+        if (!category.trim()) return;
+
+        try {
+            const res = await fetch(`${baseURL}/api/user/${userId}/create-content`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    category: category,
+                    genre: [],        // start empty
+                    userId: userId,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setShowCreateModal(false);   // close modal
+
+                // Navigate to Category Page
+                router.push(`/category/${category}?userId=${userId}`);
+            } else {
+                console.log("Error:", data.error);
+            }
+        } catch (err) {
+            console.log("Failed to add category", err);
+        }
+    };
   return (
     <View style={styles.container}>
       {/* TOP NAVBAR */}
@@ -43,13 +97,13 @@ const landing = () => {
         <Text style={styles.title}>Home</Text>
 
         <View style={{ flexDirection: "row", marginLeft: "auto", gap: 15 }}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleCreateCategory}>
             <Image
               source={require("../assets/add-post.png")}
               style={styles.navIcon}
             />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleSearch}>
             <Image
               source={require("../assets/search.png")}
               style={styles.navIcon}
@@ -57,6 +111,24 @@ const landing = () => {
           </TouchableOpacity>
         </View>
       </View>
+      {showSearchBar && (
+        <View style={{ paddingHorizontal: 15, marginTop: 10 }}>
+            <TextInput
+            placeholder="Search category..."
+            placeholderTextColor="#999"
+            style={{
+                backgroundColor: "#111",
+                color: "#fff",
+                padding: 10,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: "#444",
+            }}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            />
+        </View>
+        )}
 
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
 
@@ -77,20 +149,42 @@ const landing = () => {
           <Text style={{ color: "#aaa", marginLeft: 10 }}>more..</Text>
         </View>
 
+        {showCreateModal &&  (
+        <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Add New Category</Text>
+
+            <TextInput
+                placeholder="Enter category..."
+                placeholderTextColor="#aaa"
+                style={styles.modalInput}
+                value={category}
+                onChangeText={setCategory}
+            />
+
+            <TouchableOpacity style={styles.modalBtn} onPress={handleAddCategory} >
+                <Text style={styles.modalBtnText}>Add Item</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={closeModal}>
+                <Text style={{ color: "#fff", marginTop: 10 }}>Cancel</Text>
+            </TouchableOpacity>
+            </View>
+        </View>
+        )}
+
         {/* SECTIONS */}
-        {renderSection("Kdramas")}
-        {renderSection("Movies")}
-        {renderSection("TV Shows")}
+        {filtered.map(category => renderSection(category))}
       </ScrollView>
 
       {/* BOTTOM NAVBAR */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.bottomItem}>
+        <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push("/landing")}}>
           <Image source={require("../assets/house.png")} style={styles.bottomIcon} />
           <Text style={styles.bottomText}>Home</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.bottomItem}>
+        <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push("/profile")}}>
           <Image source={require("../assets/person.png")} style={styles.bottomIcon} />
           <Text style={styles.bottomText}>{firstName || "Profile"}</Text>
         </TouchableOpacity>
@@ -238,4 +332,66 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
   },
+  modalOverlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0,0,0,0.6)", // dark overlay
+  justifyContent: "center",
+  alignItems: "center",
+  paddingHorizontal: 20,
+  zIndex: 999,
+},
+
+modalBox: {
+  width: "100%",
+  padding: 20,
+  borderRadius: 20,
+
+  // glass effect (no blur)
+  backgroundColor: "rgba(255,255,255,0.12)",
+  borderWidth: 1,
+  borderColor: "rgba(255,255,255,0.25)",
+
+  shadowColor: "#000",
+  shadowOpacity: 0.4,
+  shadowRadius: 20,
+  shadowOffset: { width: 0, height: 10 },
+  elevation: 10,
+  alignItems: "center",
+},
+
+modalTitle: {
+  fontSize: 20,
+  fontWeight: "700",
+  color: "#fff",
+  marginBottom: 20,
+},
+
+modalInput: {
+  width: "100%",
+  backgroundColor: "rgba(0,0,0,0.4)",
+  borderWidth: 1,
+  borderColor: "#555",
+  borderRadius: 10,
+  padding: 12,
+  color: "#fff",
+  marginBottom: 20,
+},
+
+modalBtn: {
+  backgroundColor: "#fff",
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  borderRadius: 10,
+  marginTop: 10,
+},
+
+modalBtnText: {
+  fontSize: 16,
+  fontWeight: "700",
+  color: "#000",
+},
 });
