@@ -13,22 +13,64 @@ import { useLocalSearchParams } from "expo-router";
 import { router } from "expo-router";
 
 export default function GenrePage() {
-  const { categoryId,category,firstName, userId } = useLocalSearchParams();
+  const { categoryId,category,firstName, userId,genre,genreId } = useLocalSearchParams();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [genre,setGenre] = useState("");
+  const [item,setItem] = useState("");
   const baseURL = "http://192.168.1.4:4000";
+  const [toggle,setToggle] = useState("Search");
+  const [itemData, setItemData] = useState({
+    title: "",
+    content: "",
+    imageUrl: ""
+    });
+    const [loadingGemini, setLoadingGemini] = useState(false);
 
-  const handleCreateGenre = () => {
+    const fetchGeminiData = async () => {
+    if (!item.trim()) return;
+
+    try {
+        setLoadingGemini(true);
+
+        const prompt = `
+        Give a short summary and image URL for: ${item}.
+        Return a JSON in this exact format:
+        {
+            "title": "",
+            "content": "",
+            "imageUrl": ""
+        }
+        `;
+
+        const result = await fetch(`${baseURL}/api/gemini`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt }),
+        });
+        const text = result.response.text();
+
+        // Extract JSON safely
+        const json = JSON.parse(text.match(/\{[\s\S]*\}/)[0]);
+
+        setItemData(json);
+        setToggle("Add Item");
+    } catch (err) {
+        console.log("Gemini fetch error:", err);
+    } finally {
+        setLoadingGemini(false);
+    }
+    };
+
+  const handleCreateItem = () => {
         setShowCreateModal(true);
     };
   const closeModal = () => {
         setShowCreateModal(false);
     };
-  const handleAddGenre = async () => {
-  if (!genre.trim()) return;
+  const handleAddItem = async () => {
+  if (!item.trim()) return;
 
   try {
-    const res = await fetch(`${baseURL}/api/content/${categoryId}/add-genre`, {
+    const res = await fetch(`${baseURL}/api/content/${categoryId}/add-item`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ genre }),
@@ -38,10 +80,6 @@ export default function GenrePage() {
 
     if (res.ok) {
       setShowCreateModal(false);
-
-      router.push(
-        `/genre/${genre}?userId=${userId}&firstName=${firstName}&category=${category}&categoryId=${categoryId}`
-      );
     } else {
       console.log("Error:", data.error);
     }
@@ -54,10 +92,10 @@ export default function GenrePage() {
           {/* TOP NAVBAR */}
           <View style={styles.navbar}>
             <Image source={require("../../assets/logo.png")} style={styles.logo} />
-            <Text style={styles.title}>{category}</Text>
+            <Text style={styles.title}>{category}/{genre}</Text>
     
             <View style={{ flexDirection: "row", marginLeft: "auto", gap: 15 }}>
-              <TouchableOpacity onPress={handleCreateGenre}>
+              <TouchableOpacity onPress={handleCreateItem}>
                 <Image
                   source={require("../../assets/add-post.png")}
                   style={styles.navIcon}
@@ -75,18 +113,21 @@ export default function GenrePage() {
           {showCreateModal &&  (
             <View style={styles.modalOverlay}>
                 <View style={styles.modalBox}>
-                <Text style={styles.modalTitle}>Add New Genre</Text>
+                <Text style={styles.modalTitle}>Add New Item</Text>
     
                 <TextInput
-                    placeholder="Enter genre..."
+                    placeholder="Enter item..."
                     placeholderTextColor="#aaa"
                     style={styles.modalInput}
-                    value={genre}
-                    onChangeText={setGenre}
+                    value={item}
+                    onChangeText={setItem}
                 />
     
-                <TouchableOpacity style={styles.modalBtn} onPress={handleAddGenre} >
-                    <Text style={styles.modalBtnText}>Add Genre</Text>
+                <TouchableOpacity
+                style={styles.modalBtn}
+                onPress={toggle === "Search" ? fetchGeminiData : handleAddItem}
+                >
+                <Text style={styles.modalBtnText}>{toggle}</Text>
                 </TouchableOpacity>
     
                 <TouchableOpacity onPress={closeModal}>

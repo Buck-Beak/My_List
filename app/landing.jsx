@@ -172,7 +172,7 @@ const landing = () => {
             </View>
         </View>
         )}
-        <TouchableOpacity style={styles.categoryBtn} onPress={()=>{router.push(`/category/Movies?userId=${userId}&firstName=${firstName}`)}}>
+        <TouchableOpacity style={styles.categoryBtn} onPress={()=>{router.push(`/genre/e?userId=${userId}&firstName=${firstName}&category=E&categoryId=69384523888db778acacff28&genreId=69384531888db778acacff2a`)}}>
             <Text style={styles.categoryText}>Test button</Text>
         </TouchableOpacity>
 
