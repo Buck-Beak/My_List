@@ -18,7 +18,7 @@ const register = () => {
   const [lastname, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const baseURL = "http://192.168.1.4:4000";  // replace with your IP
+  const baseURL = "http://192.168.1.5:4000";  // replace with your IP
   const handleRegister = async () => {
     try {
       const res = await fetch(`${baseURL}/api/user/register`, {

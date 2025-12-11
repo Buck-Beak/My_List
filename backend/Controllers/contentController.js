@@ -95,3 +95,48 @@ export const addGenre = async (req, res) => {
   }
 };
 
+export const addItemToGenre = async (req, res) => {
+  const { contentId, genreId } = req.params;
+  const { title, content, imageUrl } = req.body;
+
+  try {
+    // Find the content and genre
+    const contentDoc = await Content.findById(contentId);
+    if (!contentDoc) return res.status(404).json({ error: "Content not found" });
+
+    const genreObj = contentDoc.genre.id(genreId); // Mongoose subdocument
+    if (!genreObj) return res.status(404).json({ error: "Genre not found" });
+
+    // Add new list item
+    genreObj.lists.push({ title, content, imageUrl });
+
+    await contentDoc.save();
+
+    res.status(200).json(contentDoc);
+  } catch (err) {
+    console.error("Error adding item:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// GET /api/content/:contentId/:genreId/item/:itemId
+export const getItemById = async (req, res) => {
+  const { contentId, genreId, itemId } = req.params;
+
+  try {
+    const content = await Content.findById(contentId);
+    console.log("Fetched content:", content);
+    if (!content) return res.status(404).json({ error: "Content not found" });
+
+    const genreObj = content.genre.id(genreId);
+    if (!genreObj) return res.status(404).json({ error: "Genre not found" });
+
+    const item = genreObj.lists.id(itemId);
+    if (!item) return res.status(404).json({ error: "Item not found" });
+
+    res.status(200).json(item);
+  } catch (err) {
+    console.error("Error fetching item:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

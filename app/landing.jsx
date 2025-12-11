@@ -19,7 +19,7 @@ const landing = () => {
     const [showSearchBar, setShowSearchBar] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const baseURL = "http://192.168.1.4:4000";
+    const baseURL = "http://192.168.1.5:4000";
     const allCategories = ["Kdramas", "Movies", "TV Shows"];
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [category,setCategory] = useState("");
@@ -172,7 +172,7 @@ const landing = () => {
             </View>
         </View>
         )}
-        <TouchableOpacity style={styles.categoryBtn} onPress={()=>{router.push(`/genre/e?userId=${userId}&firstName=${firstName}&category=E&categoryId=69384523888db778acacff28&genreId=69384531888db778acacff2a`)}}>
+        <TouchableOpacity style={styles.categoryBtn} onPress={()=>{router.push(`/item/Harry Potter?userId=${userId}&firstName=${firstName}&category=E&categoryId=69384523888db778acacff28&genre=e&genreId=69384531888db778acacff2a&itemId=693adfd7c89b9479df17e126`)}}>
             <Text style={styles.categoryText}>Test button</Text>
         </TouchableOpacity>
 

@@ -16,7 +16,7 @@ export default function CategoryPage() {
   const { categoryId,category,firstName, userId } = useLocalSearchParams();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [genre,setGenre] = useState("");
-  const baseURL = "http://192.168.1.4:4000";
+  const baseURL = "http://192.168.1.5:4000";
 
   const handleCreateGenre = () => {
         setShowCreateModal(true);
