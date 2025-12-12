@@ -18,12 +18,27 @@ export default function GenrePage() {
   const [item,setItem] = useState("");
   const baseURL = "http://192.168.1.5:4000";
   const [toggle,setToggle] = useState("Search");
+  const [items, setItems] = useState([]);
   const [itemData, setItemData] = useState({
     title: "",
     content: "",
     imageUrl: ""
     });
     const [loadingGemini, setLoadingGemini] = useState(false);
+
+    useEffect(() => {
+      fetchItems();
+    }, []);
+
+    const fetchItems = async () => {
+      try {
+        const res = await fetch(`${baseURL}/api/content/${categoryId}/${genreId}/items`);
+        const data = await res.json();
+        setItems(data.items);  // expect array of { _id, title, imageUrl }
+      } catch (err) {
+        console.log("Error fetching items:", err);
+      }
+    };
 
     const fetchGeminiData = async () => {
       console.log("Fetching Gemini data for item:", item);
@@ -187,6 +202,28 @@ export default function GenrePage() {
                 </View>
             </View>
             )}
+
+            {/* ITEM GRID */}
+          <ScrollView style={{ flex: 1, paddingHorizontal: 15, marginTop: 10 }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>
+              
+              {items.map((item) => (
+                <TouchableOpacity
+                  key={item._id}
+                  style={styles.itemCard}
+                  onPress={() =>
+                    router.push(
+                      `/item/${encodeURIComponent(item.title)}?userId=${userId}&firstName=${firstName}&category=${category}&categoryId=${categoryId}&genre=${genre}&genreId=${genreId}&itemId=${item._id}`
+                    )
+                  }
+                >
+                  <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+                  <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
+                </TouchableOpacity>
+              ))}
+
+            </View>
+          </ScrollView>
 
           {/* BOTTOM NAVBAR */}
           <View style={styles.bottomBar}>
@@ -358,5 +395,30 @@ previewContent: {
   color: "#ccc",
   marginTop: 4,
   fontSize: 13,
-}
+},
+itemCard: {
+  width: "48%", 
+  backgroundColor: "#111",
+  padding: 10,
+  borderRadius: 12,
+  marginBottom: 15,
+  borderWidth: 1,
+  borderColor: "#333",
+},
+
+itemImage: {
+  width: "100%",
+  height: 150,
+  borderRadius: 10,
+  backgroundColor: "#222",
+},
+
+itemTitle: {
+  marginTop: 8,
+  color: "#fff",
+  fontSize: 14,
+  fontWeight: "600",
+  textAlign: "center",
+},
+
 });

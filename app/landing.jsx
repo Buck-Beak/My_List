@@ -20,7 +20,7 @@ const landing = () => {
     const [searchQuery, setSearchQuery] = useState("");
 
     const baseURL = "http://192.168.1.5:4000";
-    const allCategories = ["Kdramas", "Movies", "TV Shows"];
+    const [contents, setContents] = useState([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [category,setCategory] = useState("");
 
@@ -32,29 +32,46 @@ const landing = () => {
         setShowCreateModal(false);
     };
 
-    const filtered = allCategories.filter(c =>
-        c.toLowerCase().includes(searchQuery.toLowerCase())
-    );
 
     useEffect(() => {
-        const fetchUserName = async () => {
+        const fetchData = async () => {
             try {
-                const res = await fetch(`${baseURL}/api/user/${userId}`,{
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            });
-                const data = await res.json();
-                if (res.ok) {
-                setFirstName(data.firstname);
-                } else {
-                console.error(data.error);
-                }
+                // fetch user details
+                const userRes = await fetch(`${baseURL}/api/user/${userId}`);
+                const userData = await userRes.json();
+                if (userRes.ok) setFirstName(userData.firstname);
+
+                // fetch contents
+                const contentRes = await fetch(`${baseURL}/api/content/user/${userId}/contents`);
+                const data = await contentRes.json();
+                console.log("Fetched contents:", data);
+                setContents(data.contents);
             } catch (err) {
-                console.error("Failed to fetch user:", err);
+                console.error("Error:", err);
             }
         };
-        fetchUserName();
+
+        fetchData();
     }, []);
+
+    const getItemsForCategory = (categoryObj) => {
+      const items = [];
+
+      categoryObj.genre.forEach(genreObj => {
+        if (genreObj.lists) {
+          genreObj.lists.forEach(item => items.push({
+          ...item,
+          genreTitle: genreObj.title,
+          genreId: genreObj._id
+        }));
+        }
+      });
+
+      console.log(`Items for category ${categoryObj.category}:`, items);
+
+      return items;
+    };
+
 
     const handleSearch = () => {
         setShowSearchBar(!showSearchBar);
@@ -133,21 +150,7 @@ const landing = () => {
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
 
         {/* CATEGORY BUTTONS */}
-        <View style={styles.categoryRow}>
-          <TouchableOpacity style={styles.categoryBtn}>
-            <Text style={styles.categoryText}>Kdramas</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryBtn}>
-            <Text style={styles.categoryText}>Movies</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryBtn}>
-            <Text style={styles.categoryText}>TV Shows</Text>
-          </TouchableOpacity>
-
-          <Text style={{ color: "#aaa", marginLeft: 10 }}>more..</Text>
-        </View>
+      
 
         {showCreateModal &&  (
         <View style={styles.modalOverlay}>
@@ -176,8 +179,41 @@ const landing = () => {
             <Text style={styles.categoryText}>Test button</Text>
         </TouchableOpacity>
 
-        {/* SECTIONS */}
-        {filtered.map(category => renderSection(category))}
+        {/* CONTENT SECTIONS */}
+        {Array.isArray(contents) && contents.map(category => {
+        const items = getItemsForCategory(category);
+
+        return (
+          <View key={category._id} style={{ marginBottom: 30 }}>
+            
+            {/* Category Title */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.categoryTitle}>{category.category}</Text>
+              <TouchableOpacity onPress={() => router.push(`/category/${category.category}?userId=${userId}&firstName=${firstName}&categoryId=${category._id}`)}>
+                <Text style={styles.seeAllText}>See All ></Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Horizontal Scroll of Items */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {items.map(item => (
+                <TouchableOpacity 
+                  key={item._id}
+                  onPress={() => router.push(`/item/${item.title}?userId=${userId}&firstName=${firstName}&category=${category.category}&categoryId=${category._id}&genre=${item.genreTitle}&genreId=${item.genreId}&itemId=${item._id}`)}  
+                >
+                  <Image 
+                    source={{ uri: item.itemImageUrl }} 
+                    style={styles.itemImage}
+                  />
+                  <Text>{item.title}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+          </View>
+        );
+      })}
+
       </ScrollView>
 
       {/* BOTTOM NAVBAR */}
@@ -195,23 +231,6 @@ const landing = () => {
     </View>
   );
 };
-
-// UI for each section
-const renderSection = (title) => (
-  <View style={{ marginTop: 25 }}>
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.seeAll}>See All ></Text>
-    </View>
-
-    {/* Placeholder cards */}
-    <View style={styles.cardRow}>
-      {[1, 2, 3, 4].map((item) => (
-        <View key={item} style={styles.card} />
-      ))}
-    </View>
-  </View>
-);
 
 export default landing;
 
@@ -397,4 +416,31 @@ modalBtnText: {
   fontWeight: "700",
   color: "#000",
 },
+
+sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+
+  categoryTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+
+  seeAllText: {
+    color: "white",
+    opacity: 0.7,
+    fontWeight: "500",
+  },
+
+  itemImage: {
+    width: 130,
+    height: 180,
+    marginRight: 15,
+    borderRadius: 10,
+    backgroundColor: "#444",
+  },
 });

@@ -1,5 +1,6 @@
 import User from "../Models/userModel.js";
 import Content from "../Models/contentModel.js";
+import mongoose from "mongoose";
 
 export const createContent = async (req, res) => {
   try {
@@ -119,6 +120,25 @@ export const addItemToGenre = async (req, res) => {
   }
 };
 
+//GET /api/content/user/:userId/contents
+export const getUserCategories = async (req, res) => {
+  const { userId } = req.params;
+  console.log("Fetching categories for userId:", userId);
+
+  try {
+    const contents = await Content.find({
+      user: new mongoose.Types.ObjectId(userId)
+    })
+    console.log("Fetched contents for user:", contents);
+    res.status(200).json({ contents });
+
+  } catch (err) {
+    console.error("Error fetching categories:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 // GET /api/content/:contentId/:genreId/item/:itemId
 export const getItemById = async (req, res) => {
   const { contentId, genreId, itemId } = req.params;
@@ -138,5 +158,22 @@ export const getItemById = async (req, res) => {
   } catch (err) {
     console.error("Error fetching item:", err);
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const getItemsByGenre = async (req, res) => {
+  try {
+    const { categoryId, genreId } = req.params;
+
+    const category = await Content.findById(categoryId);
+    if (!category) return res.status(404).json({ error: "Category not found" });
+
+    const genre = category.genres.id(genreId);
+    if (!genre) return res.status(404).json({ error: "Genre not found" });
+
+    return res.json({ items: genre.items });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Server error" });
   }
 };
