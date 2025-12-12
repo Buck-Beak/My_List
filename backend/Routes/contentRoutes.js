@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { createContent,getAllContent,getContentById,addGenre,addItemToGenre,getItemById,getItemsByGenre
-  ,getUserCategories
+  ,getUserCategories,getContentByCategory
  } from "../Controllers/contentController.js";
 import express from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -17,8 +17,9 @@ router.get("/content/:contentId", getContentById);
 router.patch("/content/:contentId/add-genre", addGenre);
 router.patch("/content/:contentId/:genreId/add-item", addItemToGenre);
 router.get("/content/:contentId/:genreId/item/:itemId", getItemById);
-router.get("/content/:contentId/:genreId/items", getItemsByGenre);
+router.get("/content/user/:userId/:contentId/:genreId/items", getItemsByGenre);
 router.get("/content/user/:userId/contents", getUserCategories);
+router.get("/content/user/:userId/:categoryId/contents", getContentByCategory);
 router.post("/gemini", async (req, res) => {
   try {
     const { prompt } = req.body;

@@ -16,7 +16,25 @@ export default function CategoryPage() {
   const { categoryId,category,firstName, userId } = useLocalSearchParams();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [genre,setGenre] = useState("");
+  const [contents, setContents] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchBar, setShowSearchBar] = useState(false);
   const baseURL = "http://192.168.1.5:4000";
+
+  const handleSearch = () => {
+        setShowSearchBar(!showSearchBar);
+    }
+  const filteredContents = contents
+  .map((categoryItem) => {
+    const filteredGenres = categoryItem.genre.filter((gen) =>
+      gen.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return { ...categoryItem, genre: filteredGenres };
+  })
+  .filter((categoryItem) => categoryItem.genre.length > 0);
+
+
 
   const handleCreateGenre = () => {
         setShowCreateModal(true);
@@ -40,7 +58,7 @@ export default function CategoryPage() {
       setShowCreateModal(false);
 
       router.push(
-        `/genre/${genre}?userId=${userId}&firstName=${firstName}&category=${category}&categoryId=${categoryId}`
+        `/genre/${genre}?userId=${userId}&firstName=${firstName}&category=${category}&categoryId=${categoryId}&genreId=${data._id}`
       );
     } else {
       console.log("Error:", data.error);
@@ -49,6 +67,20 @@ export default function CategoryPage() {
     console.log("Failed to add genre", err);
   }
 };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const contentRes = await fetch(`${baseURL}/api/content/user/${userId}/${categoryId}/contents`);
+        const data = await contentRes.json();
+        console.log("Fetched contents:", data);
+        setContents(data.contents);
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    };
+    fetchData();
+  }, []);
   return (
     <View style={styles.container}>
           {/* TOP NAVBAR */}
@@ -63,7 +95,7 @@ export default function CategoryPage() {
                   style={styles.navIcon}
                 />
               </TouchableOpacity>
-              <TouchableOpacity >
+              <TouchableOpacity onPress={handleSearch}>
                 <Image
                   source={require("../../assets/search.png")}
                   style={styles.navIcon}
@@ -71,6 +103,25 @@ export default function CategoryPage() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {showSearchBar && (
+          <View style={{ paddingHorizontal: 15, marginTop: 10 }}>
+              <TextInput
+              placeholder="Search category..."
+              placeholderTextColor="#999"
+              style={{
+                  backgroundColor: "#111",
+                  color: "#fff",
+                  padding: 10,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: "#444",
+              }}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              />
+          </View>
+          )}
 
           {showCreateModal &&  (
             <View style={styles.modalOverlay}>
@@ -96,9 +147,50 @@ export default function CategoryPage() {
             </View>
             )}
 
+            <ScrollView contentContainerStyle={{ paddingBottom: 80 ,marginTop:30}}>
+        {filteredContents.length > 0 &&
+          filteredContents.map((categoryItem) =>
+            categoryItem.genre.map((genreItem) => {
+              const items = genreItem.lists || [];
+              return (
+                <View key={genreItem._id} style={{ marginBottom: 30 }}>
+                  {/* Genre Title */}
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.categoryTitle}>{genreItem.title}</Text>
+                    <TouchableOpacity onPress={() => router.push(`/genre/${genreItem.title}?userId=${userId}&firstName=${firstName}&category=${category}&categoryId=${categoryId}&genreId=${genreItem._id}`)}>
+                      <Text style={styles.seeAllText}>See All ></Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Horizontal Scroll of Items */}
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20 }}>
+                    {items.map((item) => (
+                      <TouchableOpacity
+                        key={item._id}
+                        onPress={() =>
+                          router.push(
+                            `/item/${item.title}?userId=${userId}&firstName=${firstName}&category=${category}&categoryId=${categoryId}&genre=${genreItem.title}&genreId=${genreItem._id}&itemId=${item._id}`
+                          )
+                        }
+                        style={{ marginRight: 20 }}
+                      >
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          style={styles.itemImage}
+                        />
+                        <Text style={{ color: "#fff", width: 130 }}>{item.title}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              );
+            })
+          )}
+      </ScrollView>
+
           {/* BOTTOM NAVBAR */}
           <View style={styles.bottomBar}>
-            <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push("/landing")}}>
+            <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push(`/landing?userId=${userId}`)}}>
               <Image source={require("../../assets/house.png")} style={styles.bottomIcon} />
               <Text style={styles.bottomText}>Home</Text>
             </TouchableOpacity>
@@ -236,4 +328,28 @@ modalBtnText: {
   fontWeight: "700",
   color: "#000",
 },
+categoryTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+
+  seeAllText: {
+    color: "white",
+    opacity: 0.7,
+    fontWeight: "500",
+  },
+itemImage: {
+    width: 130,
+    height: 180,
+    borderRadius: 10,
+    backgroundColor: "#444",
+  },
+
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
 });

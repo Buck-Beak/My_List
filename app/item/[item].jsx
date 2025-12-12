@@ -14,9 +14,10 @@ import { router } from "expo-router";
 
 export default function ItemDetails(){
     const { itemTitle, userId,firstName,category,categoryId,genre,genreId,itemId } = useLocalSearchParams(); 
+    console.log("item id",itemId)
     const baseURL = "http://192.168.1.5:4000";
     const [itemData, setItemData] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -44,15 +45,6 @@ export default function ItemDetails(){
               <View style={styles.navbar}>
                 <Image source={require("../../assets/logo.png")} style={styles.logo} />
                 <Text style={styles.title}>{category}/{genre}/{itemData.title}</Text>
-        
-                <View style={{ flexDirection: "row", marginLeft: "auto", gap: 15 }}>
-                  <TouchableOpacity >
-                    <Image
-                      source={require("../../assets/search.png")}
-                      style={styles.navIcon}
-                    />
-                  </TouchableOpacity>
-                </View>
               </View>
 
               {/* ITEM DETAILS */}
@@ -67,7 +59,7 @@ export default function ItemDetails(){
 
               {/* BOTTOM NAVBAR */}
             <View style={styles.bottomBar}>
-                <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push("/landing")}}>
+                <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push(`/landing?userId=${userId}`)}}>
                 <Image source={require("../../assets/house.png")} style={styles.bottomIcon} />
                 <Text style={styles.bottomText}>Home</Text>
                 </TouchableOpacity>

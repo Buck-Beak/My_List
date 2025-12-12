@@ -11,6 +11,8 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { router } from "expo-router";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 
 const landing = () => {
     const {userId} = useLocalSearchParams();
@@ -32,8 +34,12 @@ const landing = () => {
         setShowCreateModal(false);
     };
 
+    const filteredContents = contents.filter(content =>
+      content.category.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-    useEffect(() => {
+    useFocusEffect(
+      useCallback(() => {
         const fetchData = async () => {
             try {
                 // fetch user details
@@ -52,7 +58,8 @@ const landing = () => {
         };
 
         fetchData();
-    }, []);
+    }, [userId])
+  );
 
     const getItemsForCategory = (categoryObj) => {
       const items = [];
@@ -175,12 +182,9 @@ const landing = () => {
             </View>
         </View>
         )}
-        <TouchableOpacity style={styles.categoryBtn} onPress={()=>{router.push(`/item/Harry Potter?userId=${userId}&firstName=${firstName}&category=E&categoryId=69384523888db778acacff28&genre=e&genreId=69384531888db778acacff2a&itemId=693adfd7c89b9479df17e126`)}}>
-            <Text style={styles.categoryText}>Test button</Text>
-        </TouchableOpacity>
 
         {/* CONTENT SECTIONS */}
-        {Array.isArray(contents) && contents.map(category => {
+        {Array.isArray(filteredContents) && filteredContents.map(category => {
         const items = getItemsForCategory(category);
 
         return (
@@ -195,17 +199,17 @@ const landing = () => {
             </View>
 
             {/* Horizontal Scroll of Items */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 20 }}>
               {items.map(item => (
                 <TouchableOpacity 
                   key={item._id}
                   onPress={() => router.push(`/item/${item.title}?userId=${userId}&firstName=${firstName}&category=${category.category}&categoryId=${category._id}&genre=${item.genreTitle}&genreId=${item.genreId}&itemId=${item._id}`)}  
                 >
                   <Image 
-                    source={{ uri: item.itemImageUrl }} 
+                    source={{ uri: item.imageUrl }} 
                     style={styles.itemImage}
                   />
-                  <Text>{item.title}</Text>
+                  <Text style={{ color: "#fff", width: 130 }}>{item.title}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -218,7 +222,7 @@ const landing = () => {
 
       {/* BOTTOM NAVBAR */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push("/landing")}}>
+        <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push(`/landing?userId=${userId}`)}}>
           <Image source={require("../assets/house.png")} style={styles.bottomIcon} />
           <Text style={styles.bottomText}>Home</Text>
         </TouchableOpacity>
@@ -422,6 +426,7 @@ sectionHeader: {
     justifyContent: "space-between",
     paddingHorizontal: 20,
     marginBottom: 10,
+    marginTop:20
   },
 
   categoryTitle: {

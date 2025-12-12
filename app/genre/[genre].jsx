@@ -14,6 +14,7 @@ import { router } from "expo-router";
 
 export default function GenrePage() {
   const { categoryId,category,firstName, userId,genre,genreId } = useLocalSearchParams();
+  console.log(genreId)
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [item,setItem] = useState("");
   const baseURL = "http://192.168.1.5:4000";
@@ -25,6 +26,16 @@ export default function GenrePage() {
     imageUrl: ""
     });
     const [loadingGemini, setLoadingGemini] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showSearchBar, setShowSearchBar] = useState(false);
+
+    const handleSearch = () => {
+        setShowSearchBar(!showSearchBar);
+    }
+    
+    const filteredItems = items.filter((itm) =>
+      itm.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     useEffect(() => {
       fetchItems();
@@ -32,8 +43,9 @@ export default function GenrePage() {
 
     const fetchItems = async () => {
       try {
-        const res = await fetch(`${baseURL}/api/content/${categoryId}/${genreId}/items`);
+        const res = await fetch(`${baseURL}/api/content/user/${userId}/${categoryId}/${genreId}/items`);
         const data = await res.json();
+        console.log("Fetched items:", data);
         setItems(data.items);  // expect array of { _id, title, imageUrl }
       } catch (err) {
         console.log("Error fetching items:", err);
@@ -48,7 +60,7 @@ export default function GenrePage() {
     setLoadingGemini(true);
 
     const prompt = `
-      Give a short summary and image URL for: ${item}.
+      Give a short summary and image URL for: ${item} in category: ${category} and genre: ${genre}.
       The image should be book cover if its a book, poster if its a movie or TV show, album cover if its music, etc.
       Return only publicly accessible image URLs from open websites.
       Return JSON in this exact format:
@@ -122,7 +134,10 @@ export default function GenrePage() {
       setToggle("Search");
       console.log("Item added successfully:", data);
       console.log(itemData.title);
-      router.push(`/item/${itemData.title}?userId=${userId}&firstName=${firstName}&category=${category}&categoryId=${categoryId}&genre=${genre}&genreId=${genreId}&itemId=${data._id}`);
+      const genreObj = data.genre.find(g => g._id === genreId);
+
+      const newItem = genreObj.lists[genreObj.lists.length - 1];
+      router.push(`/item/${itemData.title}?userId=${userId}&firstName=${firstName}&category=${category}&categoryId=${categoryId}&genre=${genre}&genreId=${genreId}&itemId=${newItem._id}`);
     } else {
       console.log("Error:", data.error);
     }
@@ -145,7 +160,7 @@ export default function GenrePage() {
                   style={styles.navIcon}
                 />
               </TouchableOpacity>
-              <TouchableOpacity >
+              <TouchableOpacity onPress={handleSearch}>
                 <Image
                   source={require("../../assets/search.png")}
                   style={styles.navIcon}
@@ -153,6 +168,25 @@ export default function GenrePage() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {showSearchBar && (
+            <View style={{ paddingHorizontal: 15, marginTop: 10 }}>
+                <TextInput
+                placeholder="Search category..."
+                placeholderTextColor="#999"
+                style={{
+                    backgroundColor: "#111",
+                    color: "#fff",
+                    padding: 10,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: "#444",
+                }}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                />
+            </View>
+            )}
 
           {showCreateModal &&  (
             <View style={styles.modalOverlay}>
@@ -204,10 +238,10 @@ export default function GenrePage() {
             )}
 
             {/* ITEM GRID */}
-          <ScrollView style={{ flex: 1, paddingHorizontal: 15, marginTop: 10 }}>
+          <ScrollView style={{ flex: 1, paddingHorizontal: 15, marginTop: 30 }}>
             <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" }}>
               
-              {items.map((item) => (
+              {Array.isArray(filteredItems) && filteredItems.map((item) => (
                 <TouchableOpacity
                   key={item._id}
                   style={styles.itemCard}
@@ -227,7 +261,7 @@ export default function GenrePage() {
 
           {/* BOTTOM NAVBAR */}
           <View style={styles.bottomBar}>
-            <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push("/landing")}}>
+            <TouchableOpacity style={styles.bottomItem} onPress={() => {router.push(`/landing?userId=${userId}`)}}>
               <Image source={require("../../assets/house.png")} style={styles.bottomIcon} />
               <Text style={styles.bottomText}>Home</Text>
             </TouchableOpacity>

@@ -138,6 +138,27 @@ export const getUserCategories = async (req, res) => {
   }
 };
 
+export const getContentByCategory = async (req, res) => {
+  const { userId, categoryId } = req.params; // get user and category
+
+  try {
+    // Find the content for this user and category
+    const content = await Content.findOne({
+      user: new mongoose.Types.ObjectId(userId),
+      _id: new mongoose.Types.ObjectId(categoryId),
+    });
+
+    if (!content) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    res.status(200).json({ contents: [content] }); // return as array to match your frontend
+  } catch (err) {
+    console.error("Error fetching category contents:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 // GET /api/content/:contentId/:genreId/item/:itemId
 export const getItemById = async (req, res) => {
@@ -163,17 +184,20 @@ export const getItemById = async (req, res) => {
 
 export const getItemsByGenre = async (req, res) => {
   try {
-    const { categoryId, genreId } = req.params;
+    const { userId, contentId, genreId } = req.params;
 
-    const category = await Content.findById(categoryId);
-    if (!category) return res.status(404).json({ error: "Category not found" });
+    // Find category by _id and user
+    const category = await Content.findOne({ _id: contentId, user: userId });
+    if (!category) return res.status(404).json({ error: "Category not found for this user" });
 
-    const genre = category.genres.id(genreId);
+    // Find genre by genreId
+    const genre = category.genre.id(genreId); // note: your schema uses 'genre', not 'genres'
     if (!genre) return res.status(404).json({ error: "Genre not found" });
 
-    return res.json({ items: genre.items });
+    return res.json({ items: genre.lists }); // your data structure has 'lists' as items
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Server error" });
   }
 };
+
