@@ -15,22 +15,6 @@ const Home = () => {
   //const [displayedText, setDisplayedText] = useState("");
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-
-  // Typing effect
-  /*useEffect(() => {
-    let index = 0;
-    setDisplayedText("");
-    const interval = setInterval(() => {
-      if (index < fullText.length) {
-        setDisplayedText((prev = "") => prev + fullText[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 200);
-    return () => clearInterval(interval);
-  }, []);*/
-
   // Continuous arrow animation (loop)
   useEffect(() => {
     Animated.loop(
@@ -64,14 +48,25 @@ const Home = () => {
       <Text style={styles.title}>MY LIST</Text>
 
       {/* Get Started Button with Animated Arrow */}
-      <TouchableOpacity activeOpacity={0.8}>
-        <Link href='/register' style={styles.button}>
+      <Link href="/register" asChild>
+        <TouchableOpacity activeOpacity={0.8} style={styles.button}>
           <Text style={styles.buttonText}>Get Started</Text>
-          <Animated.View style={{ transform: [{ translateX }] }}>
+
+          <Animated.View
+            style={[
+              styles.arrow,
+              {
+                transform: [
+                  { translateY: -10 },  // vertical center
+                  { translateX },       // animation
+                ],
+              },
+            ]}
+          >
             <Ionicons name="arrow-forward" size={20} color="#fff" />
           </Animated.View>
-        </Link>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </Link>
       <Text style={styles.login}>Already have an account? <Link href='/login'>Login</Link></Text>
 
       {/* Tagline */}
@@ -109,7 +104,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 30,
     width: 180,
-    position: "absolute",
+    position: "relative",
     top: 100,
     alignSelf: "center",
     alignItems: "center",
@@ -120,6 +115,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginRight: 10,
+  },
+  arrow: {
+    top:9,
+    transform: [{ translateY: -10 }], // half icon height
   },
   login: {
     color: "#aaa",
